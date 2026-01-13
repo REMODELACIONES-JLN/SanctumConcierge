@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sanctum Playbook v3.0 | Enterprise</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sanctum-green: #5A6955;
+            --sanctum-dark: #1a2118;
+            --sanctum-bg: #F2F0EB;
+            --white: #FFFFFF;
+            --shadow: 0 4px 20px rgba(0,0,0,0.06);
+            --border: #e0e0e0;
+            --tag-bg: #e8ece9;
+        }
+
+        body { font-family: 'Inter', sans-serif; background-color: var(--sanctum-bg); margin: 0; padding: 20px; color: var(--sanctum-dark); }
+        .container { max-width: 800px; margin: 0 auto; padding-bottom: 100px; }
+
+        header { text-align: center; margin-bottom: 30px; }
+        h1 { font-family: 'Playfair Display', serif; color: var(--sanctum-green); margin: 0; font-size: 2rem; }
+        .subtitle { font-size: 0.8rem; letter-spacing: 2px; text-transform: uppercase; color: #888; margin-top: 5px; }
+
+        /* CONTROLS */
+        .control-panel {
+            background: var(--white); padding: 25px; border-radius: 12px;
+            box-shadow: var(--shadow); position: sticky; top: 15px; z-index: 100;
+            border: 1px solid rgba(90, 105, 85, 0.1);
+        }
+
+        .inputs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        
+        .input-group label { display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 6px; color: var(--sanctum-green); letter-spacing: 0.5px; }
+        .input-field {
+            width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 6px;
+            font-family: 'Inter', sans-serif; font-size: 0.95rem; transition: 0.3s; box-sizing: border-box;
+        }
+        .input-field:focus { outline: none; border-color: var(--sanctum-green); background: #fafafa; }
+
+        /* SEARCH BAR EMPHASIS */
+        #searchFilter { border-color: var(--sanctum-green); background-color: #f9fbf9; }
+
+        /* FILTERS */
+        .filter-nav { display: flex; gap: 8px; overflow-x: auto; padding: 15px 0; scrollbar-width: none; }
+        .filter-btn {
+            background: white; border: 1px solid var(--border); padding: 8px 16px;
+            border-radius: 30px; cursor: pointer; white-space: nowrap; font-size: 0.8rem; color: #555; font-weight: 500;
+        }
+        .filter-btn:hover { background: #f5f5f5; }
+        .filter-btn.active { background: var(--sanctum-green); color: white; border-color: var(--sanctum-green); }
+        
+        /* CARDS */
+        .script-list { display: grid; gap: 15px; }
+        .script-card {
+            background: var(--white); border-radius: 8px; overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03); transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid transparent; cursor: pointer;
+        }
+        .script-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); border-color: var(--sanctum-green); }
+
+        .card-header {
+            padding: 12px 20px; background: #fafafa; border-bottom: 1px solid #eee;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .card-title { font-weight: 600; font-size: 0.9rem; color: var(--sanctum-dark); }
+        .card-tag { font-size: 0.65rem; background: var(--tag-bg); padding: 4px 8px; border-radius: 4px; color: #555; text-transform: uppercase; font-weight: 600; }
+
+        .card-body { padding: 20px; position: relative; }
+        .whatsapp-bubble {
+            background: #dcf8c6; padding: 15px; border-radius: 0 10px 10px 10px;
+            font-size: 0.95rem; line-height: 1.5; color: #111; position: relative;
+        }
+        .whatsapp-bubble::before {
+            content: ''; position: absolute; top: 0; left: -8px; width: 0; height: 0;
+            border-top: 10px solid #dcf8c6; border-left: 10px solid transparent;
+        }
+
+        .highlight-name { color: #000; font-weight: bold; background: rgba(255,255,255,0.4); padding: 0 2px; }
+
+        /* TOAST */
+        .toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
+            background: #333; color: white; padding: 12px 24px; border-radius: 50px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: transform 0.3s; z-index: 1000; font-size: 0.9rem;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+
+        @media (max-width: 600px) { .inputs-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Sanctum Playbook v3.0</h1>
+            <div class="subtitle">Sistema Integral de Respuesta</div>
+        </header>
+
+        <div class="control-panel">
+            <div class="inputs-grid">
+                <div class="input-group">
+                    <label>1. Cliente (Auto-Corregido)</label>
+                    <input type="text" id="clientName" class="input-field" placeholder="ej: sofia (se convierte en Sofia)" oninput="updateScripts()" autocomplete="off">
+                </div>
+                <div class="input-group">
+                    <label>2. Atiende (Opcional)</label>
+                    <input type="text" id="senderName" class="input-field" placeholder="Vacío = 'Sanctum'" oninput="updateScripts()" autocomplete="off">
+                </div>
+            </div>
+            <div class="input-group">
+                <label>3. Buscador Inteligente</label>
+                <input type="text" id="searchFilter" class="input-field" placeholder="Escribe 'precio', 'retraso', 'cita', 'hola'..." oninput="filterScripts()">
+            </div>
+        </div>
+
+        <div class="filter-nav">
+            <button class="filter-btn active" onclick="filterByCategory('all')">📚 Todo</button>
+            <button class="filter-btn" onclick="filterByCategory('saludo')">👋 Saludos (10)</button>
+            <button class="filter-btn" onclick="filterByCategory('dinero')">💰 Dinero (10)</button>
+            <button class="filter-btn" onclick="filterByCategory('objecion')">🛡️ Objeciones (10)</button>
+            <button class="filter-btn" onclick="filterByCategory('seguimiento')">👀 Seguimiento (10)</button>
+            <button class="filter-btn" onclick="filterByCategory('crisis')">🚨 Crisis/Ética (5)</button>
+        </div>
+
+        <div id="scriptContainer" class="script-list"></div>
+    </div>
+
+    <div id="toast" class="toast">✅ Copiado al portapapeles</div>
+
+    <script>
+        // --- BASE DE DATOS MASIVA (45 SCRIPTS) ---
+        const scriptsDB = [
+            
+            // --- CATEGORÍA: SALUDOS (10 Variaciones) ---
+            { cat: 'saludo', title: '1. Lead Nuevo (Web/Ads)', tag: 'Estándar', text: "Hola *{{nombre}}* 👋, te saluda {{remitente}}, de Sanctum Home.\n\nRecibimos tu solicitud. Para darte el mejor diagnóstico, cuéntame: ¿Qué espacio de tu hogar quieres transformar en un refugio de paz? 🌿" },
+            { cat: 'saludo', title: '2. Lead Referido (VIP)', tag: 'Calidez', text: "Hola *{{nombre}}*, un gusto saludarte. Soy {{remitente}}. 👋\n\nMe comentaron que buscas renovar tu espacio. Ya nos pusieron en contexto de tu buen gusto.\n\n¿Tienes 5 minutos para que hablemos sobre lo que tienes en mente? ✨" },
+            { cat: 'saludo', title: '3. Lead Arquitecto/Diseñador', tag: 'B2B', text: "Hola Arq. *{{nombre}}*, un placer. Habla {{remitente}}, del área técnica de Sanctum.\n\nNos encanta colaborar con colegas. ¿Te gustaría enviarnos tus planos para apoyarte con la ingeniería del mobiliario? 📐" },
+            { cat: 'saludo', title: '4. Respuesta Fuera de Horario (Noche)', tag: 'Auto', text: "Hola *{{nombre}}*. Recibí tu mensaje. ✨\n\nEl equipo de diseño ya está descansando, pero mañana a las 9:00 AM serás mi primera prioridad. Que tengas una noche de paz. 🌙" },
+            { cat: 'saludo', title: '5. Respuesta Fin de Semana', tag: 'Auto', text: "Hola *{{nombre}}*. Gracias por escribir. 🌿\n\nEstamos recargando energía este fin de semana. El lunes a primera hora reviso tu proyecto personalmente. ¡Disfruta tu descanso!" },
+            { cat: 'saludo', title: '6. Cliente Antiguo (Recompra)', tag: 'Fidelización', text: "¡Qué gusto saber de ti de nuevo, *{{nombre}}*! 👋\n\nEspero que sigan disfrutando su cocina. Cuéntame, ¿qué nueva locura o mejora están planeando ahora? Sabes que su casa es nuestra casa." },
+            { cat: 'saludo', title: '7. Saludo "Solo estoy viendo"', tag: 'Soft', text: "Totalmente válido, *{{nombre}}*. La inspiración es el primer paso.\n\nTe invito a seguir nuestro Instagram para ideas. Cuando estés listo/a para aterrizar el proyecto, aquí estaremos. 🌿" },
+            { cat: 'saludo', title: '8. Saludo Post-Reunión', tag: 'Seguimiento', text: "Un gusto conocerte hoy, *{{nombre}}*. 🤝\n\nMe quedé pensando en lo que dijiste sobre la iluminación. Mañana te envío la propuesta formal con ese detalle resuelto. ¡Hablamos pronto!" },
+            { cat: 'saludo', title: '9. Confirmación de Cita', tag: 'Logística', text: "Hola *{{nombre}}*, solo para confirmar nuestra visita técnica mañana a las 11:00 AM en tu domicilio. 📍\n\nIrá nuestro arquitecto senior para tomar medidas láser. ¿Todo sigue en pie?" },
+            { cat: 'saludo', title: '10. Bienvenida al Firmar', tag: 'Onboarding', text: "¡Bienvenido/a a la familia Sanctum, *{{nombre}}*! 🥂\n\nAcabamos de recibir el anticipo. A partir de hoy, yo ({{remitente}}) seré tu guía personal hasta que installemos el último tornillo. ¡Empezamos!" },
+
+            // --- CATEGORÍA: DINERO (10 Variaciones) ---
+            { cat: 'dinero', title: '1. ¿Cuánto cuesta el metro?', tag: 'Educación', text: "Entiendo que el presupuesto es clave, *{{nombre}}*. 🧐\n\nEn Sanctum no cotizamos 'por metro' porque no usamos materiales genéricos. El costo varía según los herrajes y acabados que elijas.\n\n¿Agendamos 10 min para darte un rango honesto?" },
+            { cat: 'dinero', title: '2. "Es muy caro"', tag: 'Valor', text: "Es verdad, *{{nombre}}*, no somos la opción más barata, y no intentamos serlo.\n\nNuestros precios garantizan herrajes Blum (Austria) y una instalación perfecta que dura 15 años. Preferimos explicar el precio una vez, que pedir perdón por la calidad después. 🛡️" },
+            { cat: 'dinero', title: '3. "Tengo una cotización más barata"', tag: 'Comparativa', text: "Totalmente comprensible. Si la otra opción te ofrece tableros hidrófugos y herrajes Blum Legrabox por ese precio, ¡es una ganga!\n\nSolo asegúrate de que esté por escrito en el contrato. Si gustas, revisamos ambas cotizaciones juntos para comparar peras con peras. 🍎" },
+            { cat: 'dinero', title: '4. "¿Por qué cobran el diseño?"', tag: 'Expertise', text: "Buena pregunta, *{{nombre}}*. El diseño no es un 'dibujo', es un plano de ingeniería.\n\nCobramos el anteproyecto porque dedicamos horas de arquitectos expertos. Si decides fabricar con nosotros, ese costo se abona al 100% a tu producción. Es un ganar-ganar. 🤝" },
+            { cat: 'dinero', title: '5. Petición de Descuento', tag: 'Política', text: "Me encantaría, *{{nombre}}*, pero en Sanctum practicamos 'Mejor Precio Real'.\n\nNo inflamos los precios para luego hacer descuentos falsos. El precio que ves es el costo justo por la calidad de los materiales importados. Lo que sí puedo hacer es ajustar materiales para bajar el total. ¿Lo revisamos?" },
+            { cat: 'dinero', title: '6. Desglose de Costos', tag: 'Transparencia', text: "Claro, *{{nombre}}*. Aquí operamos con Libros Abiertos.\n\nTe anexo el desglose: Materiales (60%), Mano de Obra Especializada (25%), Logística y Gestión (15%). No hay costos ocultos. 📊" },
+            { cat: 'dinero', title: '7. "¿Puedo comprar yo los electrodomésticos?"', tag: 'Flexibilidad', text: "¡Por supuesto! Eres libre de comprarlos donde gustes, *{{nombre}}*.\n\nSolo necesito que me envíes las fichas técnicas antes de fabricar para asegurar que los huecos en la madera sean milimétricos. 📐" },
+            { cat: 'dinero', title: '8. Fluctuación Dólar/Euro', tag: 'Contexto', text: "Importante mencionar, *{{nombre}}*: Como usamos herrajes europeos, esta cotización es válida por 15 días.\n\nSi el tipo de cambio varía drásticamente, tendremos que actualizarla. Te recomiendo congelar el precio con el anticipo. 📉" },
+            { cat: 'dinero', title: '9. Pagos a Meses', tag: 'Financiamiento', text: "Sí podemos diferirlo, *{{nombre}}*. Trabajamos con pasarelas de pago seguras.\n\nConsidera que la comisión bancaria por meses sin intereses (aprox 4-10%) se suma al total, ya que es un costo del banco, no nuestro. ¿Te hago la simulación?" },
+            { cat: 'dinero', title: '10. Sobrecosto por Cambios', tag: 'Claridad', text: "Ojo, *{{nombre}}*. Como el mueble ya está en producción, hacer este cambio implica desperdiciar material ya cortado.\n\nEl costo adicional sería de $[Monto]. Necesito tu autorización escrita para proceder y ajustar la factura. 📝" },
+
+            // --- CATEGORÍA: OBJECIONES/TÉCNICO (10 Variaciones) ---
+            { cat: 'objecion', title: '1. "Tardan mucho (8 semanas)"', tag: 'Tiempo', text: "Sé que parece mucho tiempo, *{{nombre}}*. ⏳\n\nPodríamos entregarlo en 3 semanas usando pegamentos rápidos y tableros estándar, pero se despegarían en un año. Nuestro proceso de curado y control de calidad toma tiempo para garantizarte durabilidad real." },
+            { cat: 'objecion', title: '2. Ruido y Polvo en Casa', tag: 'Logística', text: "Te entiendo, las obras son invasivas. 🧹\n\nPor eso en Sanctum pre-armamos el 90% en taller. En tu casa solo haremos ensamblaje final para minimizar el ruido y el polvo. Serán solo 2-3 días de molestia, lo prometo." },
+            { cat: 'objecion', title: '3. "¿Qué garantía tengo?"', tag: 'Seguridad', text: "Tu inversión está blindada, *{{nombre}}*. 🛡️\n\nOfrecemos 1 año en mano de obra y garantía de por vida en herrajes Blum (directo con proveedor). Todo queda estipulado en tu contrato ante notario si así lo deseas." },
+            { cat: 'objecion', title: '4. "Mi carpintero lo hace igual"', tag: 'Calidad', text: "Respeto mucho el oficio. La diferencia es la ingeniería.\n\nUn carpintero suele cortar en sitio (polvo/imprecisión). Nosotros usamos máquinas CNC computarizadas que cortan con precisión de 0.1mm. El acabado es industrial, no artesanal. ✨" },
+            { cat: 'objecion', title: '5. "¿Puedo usar mi granito?"', tag: 'Técnico', text: "Sí, *{{nombre}}*, podemos hacer solo la carpintería.\n\nSolo ten en cuenta que no podemos dar garantía sobre la instalación de la piedra si es un proveedor externo, y tendríamos que coordinarnos muy bien para los tiempos. 📅" },
+            { cat: 'objecion', title: '6. Cambio de Diseño a última hora', tag: 'Fricción', text: "Hagamos una pausa, *{{nombre}}*. 🛑\n\nPodemos hacer el cambio, pero mover la estufa implica romper piso e instalación hidráulica nueva. ¿Estás dispuesto a asumir esa obra civil extra? Quiero asegurarme de que sepas el impacto." },
+            { cat: 'objecion', title: '7. Dudas sobre materiales (Melamina vs Madera)', tag: 'Educación', text: "Es un mito común. La madera sólida se hincha y tuerce con la humedad de la cocina.\n\nUsamos tableros hidrófugos de ingeniería (Vesto/Arauco) diseñados específicamente para resistir agua y calor. Es tecnología, no ahorro. 🔬" },
+            { cat: 'objecion', title: '8. "¿Quién supervisa la obra?"', tag: 'Confianza', text: "Yo personalmente ({{remitente}}) superviso, junto con el Jefe de Taller.\n\nTendrás un grupo de WhatsApp donde subiremos fotos diarias del avance. Nunca estarás a ciegas. 👀" },
+            { cat: 'objecion', title: '9. Espacio Pequeño', tag: 'Solución', text: "¡Los espacios pequeños son nuestro reto favorito! 🧩\n\nCon los herrajes correctos podemos duplicar tu capacidad de almacenaje. Déjame enseñarte unos cajones ocultos que te van a encantar." },
+            { cat: 'objecion', title: '10. Miedo a que quede mal', tag: 'Empatía', text: "Es normal tener miedo en una remodelación. 🤍\n\nPor eso antes de cortar una sola tabla, te entregamos Renders 3D fotorrealistas. No avanzamos hasta que veas en la pantalla exactamente lo que tendrás en tu casa." },
+
+            // --- CATEGORÍA: SEGUIMIENTO/CIERRE (10 Variaciones) ---
+            { cat: 'seguimiento', title: '1. Ghosting (Suave)', tag: 'Nudge', text: "Hola *{{nombre}}* 👋. No quiero ser una interrupción.\n\nSolo quería saber si el proyecto sigue siendo una prioridad este mes, o prefieres que lo retomemos más adelante. Cualquier respuesta está bien. ✨" },
+            { cat: 'seguimiento', title: '2. Ghosting (Definitivo)', tag: 'Cierre', text: "Hola *{{nombre}}*. Como no hemos tenido noticias, voy a cerrar tu expediente por ahora para no llenarte de mensajes. 📂\n\nCuando estés listo/a para retomar, solo escríbeme. ¡Aquí estaremos!" },
+            { cat: 'seguimiento', title: '3. Enviar Contrato', tag: 'Admin', text: "Listo, *{{nombre}}*. Te adjunto el contrato de prestación de servicios. 📝\n\nPor favor léelo con calma. Ahí vienen especificadas las fechas, materiales y garantías. Cualquier duda legal, la revisamos." },
+            { cat: 'seguimiento', title: '4. Recibo de Anticipo', tag: 'Finanzas', text: "¡Confirmado! Recibimos tu transferencia. ✅\n\nYa giré la orden de compra de los materiales. Tu fecha estimada de instalación es la semana del [Fecha]. Te mantendré informado." },
+            { cat: 'seguimiento', title: '5. Agendar Instalación', tag: 'Logística', text: "¡Buenas noticias *{{nombre}}*! Tu mobiliario está listo. 🚛\n\n¿Te queda bien que iniciemos la instalación el [Día] a las 9:00 AM? Necesitamos que el área esté despejada." },
+            { cat: 'seguimiento', title: '6. Check-list Final', tag: 'Calidad', text: "Mañana terminamos, *{{nombre}}*. 🏁\n\nQuiero hacer el recorrido final contigo para que revises cada cajón y puerta. No nos vamos hasta que me firmes de total conformidad." },
+            { cat: 'seguimiento', title: '7. Petición de Fotos', tag: 'Marketing', text: "Tu cocina quedó espectacular, *{{nombre}}*. 😍\n\n¿Nos darías permiso de enviar a nuestro fotógrafo para tomar unas capturas para nuestro portafolio? Te regalamos las fotos profesionales para ti." },
+            { cat: 'seguimiento', title: '8. Petición de Review', tag: 'Social', text: "Hola *{{nombre}}*. Si te gustó la experiencia Sanctum, ¿nos ayudarías con una breve reseña en Google?\n\nNos ayuda muchísimo a que más personas confíen en la honestidad radical. ⭐" },
+            { cat: 'seguimiento', title: '9. Solicitud de Referidos', tag: 'Ventas', text: "Fue un placer trabajar contigo. Si tienes algún amigo que esté sufriendo con su cocina actual, pásale mi contacto.\n\nLos trataremos con el mismo cariño que a ti. 🌿" },
+            { cat: 'seguimiento', title: '10. Chequeo a los 3 meses', tag: 'Post-Venta', text: "Hola *{{nombre}}*. Solo pasaba a saludar. 👋\n\n¿Cómo se han portado los herrajes estos meses? ¿Algún ajuste que necesites? Recuerda que tu garantía sigue activa." },
+
+            // --- CATEGORÍA: CRISIS/ÉTICA (5 Críticos) ---
+            { cat: 'crisis', title: '1. Reporte de Error (Honestidad)', tag: 'Radical', text: "Hola *{{nombre}}*, te escribo con total transparencia.\n\nUna pieza llegó con un defecto de fábrica. Podría instalarla y taparlo, pero no es nuestro estilo. 🛑\n\nPedí el reemplazo urgente. Esto nos retrasa 2 días, pero prefiero que quede perfecto. Gracias por tu paciencia. 🙏" },
+            { cat: 'crisis', title: '2. Petición Pago Efectivo (Sin IVA)', tag: 'Ética', text: "Aprecio la propuesta, *{{nombre}}*, pero en Sanctum practicamos la Transparencia Total.\n\nTodo debe ser facturado para proteger legalmente tu garantía y el seguro de los materiales. Es por tu seguridad y la nuestra. ⚖️" },
+            { cat: 'crisis', title: '3. Cliente molesto (Escucha activa)', tag: 'Crisis', text: "Te escucho y entiendo tu molestia, *{{nombre}}*. Tienes toda la razón en estar enojado/a.\n\nNo voy a poner excusas. Déjame hablar con el equipo ya mismo para ver cómo solucionamos esto hoy. Te llamo en 10 min con un plan. 🛠️" },
+            { cat: 'crisis', title: '4. Daño en obra (Accidente)', tag: 'Responsabilidad', text: "Hola *{{nombre}}*. Te informo que durante la instalación, rozamos la pintura de la pared accidentalmente. 😔\n\nYa agendé a nuestro pintor para que vaya a repararlo mañana sin costo alguno. Nos hacemos 100% responsables." },
+            { cat: 'crisis', title: '5. Rechazo de Proyecto (No alineado)', tag: 'Límites', text: "Gracias por considerarnos, *{{nombre}}*. \n\nAnalizando el proyecto, creo que no somos la mejor opción para lo que buscas (low-cost/urgente). Preferimos decirte que NO, a darte un mal servicio. Te deseo mucho éxito en la obra. ✨" },
+        ];
+
+        // --- MOTOR LÓGICO OPTIMIZADO ---
+        const container = document.getElementById('scriptContainer');
+        const nameInput = document.getElementById('clientName');
+        const senderInput = document.getElementById('senderName');
+        const searchInput = document.getElementById('searchFilter');
+        let currentCategory = 'all';
+
+        function formatName(raw) {
+            if(!raw) return "";
+            return raw.trim().toLowerCase().replace(/(?:^|\s|['"([{])+\S/g, m => m.toUpperCase());
+        }
+
+        function renderScripts() {
+            container.innerHTML = '';
+            
+            let clientRaw = formatName(nameInput.value);
+            let clientName = clientRaw || "[Nombre]";
+            
+            let senderRaw = formatName(senderInput.value);
+            let senderName = senderRaw || "Sanctum"; // Fallback Institucional
+
+            const filterText = searchInput.value.toLowerCase();
+
+            const filtered = scriptsDB.filter(s => {
+                const matchCat = currentCategory === 'all' || s.cat === currentCategory;
+                const matchSearch = s.title.toLowerCase().includes(filterText) || s.text.toLowerCase().includes(filterText) || s.tag.toLowerCase().includes(filterText);
+                return matchCat && matchSearch;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div style="text-align:center;color:#999;padding:40px;">No encontré scripts. Intenta otra palabra.</div>`;
+                return;
+            }
+
+            filtered.forEach(s => {
+                // Render Visual (con highlights)
+                let display = s.text
+                    .replace(/{{nombre}}/g, `<span class="highlight-name">${clientName}</span>`)
+                    .replace(/{{remitente}}/g, `<b>${senderName}</b>`)
+                    .replace(/\n/g, '<br>');
+
+                // Copy Text (limpio)
+                let copy = s.text
+                    .replace(/{{nombre}}/g, clientName)
+                    .replace(/{{remitente}}/g, senderName);
+
+                const card = document.createElement('div');
+                card.className = 'script-card';
+                card.onclick = () => copyToClipboard(copy);
+                card.innerHTML = `
+                    <div class="card-header">
+                        <span class="card-title">${s.title}</span>
+                        <span class="card-tag">${s.tag}</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="whatsapp-bubble">${display}</div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function updateScripts() { renderScripts(); }
+        function filterScripts() { renderScripts(); }
+        
+        function filterByCategory(cat) {
+            currentCategory = cat;
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            // Limpiar búsqueda al cambiar categoría para no confundir
+            searchInput.value = '';
+            renderScripts();
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const t = document.getElementById('toast');
+                t.classList.add('show');
+                setTimeout(() => t.classList.remove('show'), 2000);
+            });
+        }
+
+        renderScripts();
+    </script>
+</body>
+</html>
